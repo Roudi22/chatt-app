@@ -39,7 +39,7 @@ userRoutes.get("/api/users", async (req, res) => {
     const users = await UserModel.find();
 
     res.status(200).json({
-      channelsCount: users.length,
+      usersCount: users.length,
       success: true,
       users,
       message: "All users found",
