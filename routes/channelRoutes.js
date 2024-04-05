@@ -39,12 +39,12 @@ channelRoutes.get("/api/broadcast", async (req, res) => {
 // Endpoint to send a message in the broadcast channel
 channelRoutes.post("/api/broadcast", async (req, res) => {
   try {
-    const { message } = req.body;
-    if (!message) {
+    const { text } = req.body;
+    if (!text) {
       return res.status(400).json({ message: "Message is required" });
     }
     const channel = await ChannelModel.findOne({ name: "broadcast" });
-    channel.messages.push(message);
+    channel.messages.push({text});
     await channel.save();
     res.status(200).json({ channel, message: "Message sent successfully" });
   } catch (error) {
@@ -55,7 +55,7 @@ channelRoutes.post("/api/broadcast", async (req, res) => {
 channelRoutes.get("/api/channel", async (req, res) => {
   try {
     const channels = await ChannelModel.find();
-    res.status(200).json({  channelsCount: channels.length, success: true, channels, message: "All channels found"});
+    res.status(200).json({ message: "Message sent", channelsCount: channels.length, success: true, channels, message: "All channels found"});
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -70,7 +70,7 @@ channelRoutes.get("/api/channel/:id", async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 } );
-// Endpoint to send a message in a specific channel by id from a specific user
+//* Endpoint to send a message in a specific channel by id from a specific user
 channelRoutes.post("/api/channel/:id", async (req, res) => {
   try {
     const { text, userId } = req.body;
