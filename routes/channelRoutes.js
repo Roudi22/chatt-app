@@ -1,6 +1,7 @@
 import express from "express";
 import { ChannelModel } from "../models/channelModel.js";
 import { authenticateJWT } from "../middleware/authMiddlware.js";
+import { io } from "../server.js";
 export const channelRoutes = express.Router();
 
 //* create a new channel
@@ -14,6 +15,8 @@ channelRoutes.put("/api/channel", authenticateJWT, async (req, res) => {
       return res.status(400).json({ message: "Channel already exists" });
     }
     await newChannel.save();
+    // Meddela klienter att en ny kanal har skapats
+    io.emit("channelCreated", { channel: newChannel });
     res
       .status(201)
       .json({ newChannel, message: "Channel created successfully" });
@@ -44,6 +47,8 @@ channelRoutes.post("/api/broadcast", async (req, res) => {
     const channel = await ChannelModel.findOne({ name: "broadcast" });
     channel.messages.push({ text });
     await channel.save();
+    // Meddela klienter att ett nytt meddelande har skickats
+    io.emit("messageSent", { message: text });
     res.status(200).json({ channel, message: "Message sent successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
