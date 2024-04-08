@@ -4,7 +4,7 @@ export const authenticateJWT = (req, res, next) => {
     req.headers["authorization"] || req.headers["Authorization"];
 
   if (!authHeader) {
-    return res.status(401).json({ message: "Unauthorized" });
+    return res.status(401).json({ message: "login fisrt!!" });
   }
   const token = authHeader.split(" ")[1];
 
