@@ -1,7 +1,9 @@
 import express from "express";
 import { UserModel } from "../models/userModel.js";
+import bcrypt from "bcrypt";
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
+import { authenticateJWT } from "../middleware/authMiddlware.js";
 dotenv.config();
 
 export const userRoutes = express.Router();
@@ -9,7 +11,12 @@ export const userRoutes = express.Router();
 userRoutes.post("/api/user", async (req, res) => {
   try {
     const { username, password } = req.body;
-    const newUser = new UserModel({ username, password });
+    const oldUser = await UserModel.findOne({ username });
+    if (oldUser) {
+      return res.status(400).json({ message: "User already exists!" });
+    }
+    const hashedPassword = bcrypt.hashSync(password, 10);
+    const newUser = new UserModel({ username, password: hashedPassword });
     await newUser.save();
     res.status(201).json(newUser);
   } catch (error) {
@@ -21,11 +28,26 @@ userRoutes.post("/api/user", async (req, res) => {
 userRoutes.post("/api/login", async (req, res) => {
   try {
     const { username, password } = req.body;
+    if (!username || !password) {
+      return res
+        .status(400)
+        .json({ message: "username and password are required!" });
+    }
+    const user = await UserModel.findOne({ username });
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    const token = jwt.sign({ id: user._id }, process.env.SECRET_KEY);
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res
+        .status(400)
+        .json({ message: "username or password is not correct!" });
+    }
+    const token = jwt.sign(
+      { id: user._id, username: user.username },
+      process.env.SECRET_KEY
+    );
 
     res.status(200).json({ message: "Logged in successfuly", user, token });
   } catch (error) {
@@ -34,7 +56,7 @@ userRoutes.post("/api/login", async (req, res) => {
 });
 
 // Endpoint to det all users
-userRoutes.get("/api/users", async (req, res) => {
+userRoutes.get("/api/users", authenticateJWT, async (req, res) => {
   try {
     const users = await UserModel.find();
 
