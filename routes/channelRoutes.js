@@ -4,7 +4,7 @@ import { authenticateJWT } from "../middleware/authMiddlware.js";
 export const channelRoutes = express.Router();
 
 //* create a new channel
-channelRoutes.put("/api/channel", async (req, res) => {
+channelRoutes.put("/api/channel", authenticateJWT, async (req, res) => {
   try {
     const { name } = req.body;
     const newChannel = new ChannelModel({ name });
@@ -42,7 +42,7 @@ channelRoutes.post("/api/broadcast", async (req, res) => {
       return res.status(400).json({ message: "Message is required" });
     }
     const channel = await ChannelModel.findOne({ name: "broadcast" });
-    channel.messages.push({text});
+    channel.messages.push({ text });
     await channel.save();
     res.status(200).json({ channel, message: "Message sent successfully" });
   } catch (error) {
@@ -51,7 +51,7 @@ channelRoutes.post("/api/broadcast", async (req, res) => {
 });
 
 // Endpoint to get all channels
-channelRoutes.get("/api/channel", async (req, res) => {
+channelRoutes.get("/api/channel", authenticateJWT, async (req, res) => {
   try {
     const channels = await ChannelModel.find();
 
@@ -67,7 +67,7 @@ channelRoutes.get("/api/channel", async (req, res) => {
 });
 
 // get all messages in a specific channel by id
-channelRoutes.get("/api/channel/:id", async (req, res) => {
+channelRoutes.get("/api/channel/:id", authenticateJWT, async (req, res) => {
   try {
     const channel = await ChannelModel.findById(req.params.id);
     res.status(200).json({
@@ -80,7 +80,7 @@ channelRoutes.get("/api/channel/:id", async (req, res) => {
   }
 });
 
-channelRoutes.post("/api/channel/:id", async (req, res) => {
+channelRoutes.post("/api/channel/:id", authenticateJWT, async (req, res) => {
   try {
     const { text, userId } = req.body;
     if (!text || !userId) {
@@ -96,7 +96,7 @@ channelRoutes.post("/api/channel/:id", async (req, res) => {
 });
 
 // Endpoint to delete a specific channel by id
-channelRoutes.delete("/api/channel/:id", async (req, res) => {
+channelRoutes.delete("/api/channel/:id", authenticateJWT, async (req, res) => {
   try {
     const channel = await ChannelModel.findByIdAndDelete(req.params.id);
     res.status(200).json({ channel, message: "Channel deleted successfully" });
